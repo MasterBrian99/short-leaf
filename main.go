@@ -14,7 +14,7 @@ func main() {
 	router := r.Group("api")
 	short := router.Group("short")
 	{
-		short.GET("/", controllers.CreateShortUrl)
+		short.POST("/", controllers.CreateShortUrl)
 	}
 	user := router.Group("user")
 	{
