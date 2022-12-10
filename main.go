@@ -1,23 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"short-leaf/app/config/database"
-	"short-leaf/app/routes"
-
-	"github.com/gofiber/fiber/v2"
+	"github.com/MasterBrian99/short-leaf/config"
+	"github.com/MasterBrian99/short-leaf/controllers"
+	"github.com/MasterBrian99/short-leaf/middlewares"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	config.LoadEnv()
+	config.DatabaseSetup()
+	r := gin.Default()
+	router := r.Group("api")
+	short := router.Group("short")
+	{
+		short.POST("/", controllers.CreateShortUrl)
+	}
+	user := router.Group("user")
+	{
+		user.POST("/register", controllers.CreateNewUser)
+		user.POST("/login", controllers.Login)
+	}
+	// config.DB.AutoMigrate(models.User{}, models.ShortUrls{})
 
-	database.DatabaseSetup()
-
-	fmt.Println("Starting Servcer")
-	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello From Go")
+	protected := r.Group("/api/admin")
+	protected.Use(middlewares.JwtAuthMiddleware())
+	protected.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
 	})
-	routes.AuthRoutes(app)
-	log.Fatal(app.Listen(":3000"))
+	r.Run() // listen and serve on 0.0.0.0:8080
 }
